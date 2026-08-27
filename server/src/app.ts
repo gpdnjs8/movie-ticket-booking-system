@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { errorHandler } from "./middleware/error.middleware";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./infra/swagger";
 
 export function createApp() {
   const app = express();
@@ -11,6 +13,8 @@ export function createApp() {
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
   });
+
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.use((_req, res) => {
     res
