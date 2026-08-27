@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  createdAt    DateTime      @default(now())
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+model Movie {
+  id          String     @id @default(uuid())
+  title       String
+  genre       String
+  runtimeMin  Int
+  posterUrl   String?
+  description String?
+  createdAt   DateTime   @default(now())
+  showtimes   Showtime[]
+
+  @@map("movies")
+}
+
+model Showtime {
+  id           String        @id @default(uuid())
+  movie        Movie         @relation(fields: [movieId], references: [id])
+  movieId      String
+  screenName   String
+  startAt      DateTime
+  price        Int
+  seats        Seat[]
+  reservations Reservation[]
+
+  @@index([movieId])
+  @@map("showtimes")
+}
+
+model Seat {
+  id              String           @id @default(uuid())
+  showtime        Showtime         @relation(fields: [showtimeId], references: [id])
+  showtimeId      String
+  row             String
+  number          Int
+  reservationSeat ReservationSeat?
+
+  @@unique([showtimeId, row, number])
+  @@map("seats")
+}
+
+model Reservation {
+  id         String            @id @default(uuid())
+  user       User              @relation(fields: [userId], references: [id])
+  userId     String
+  showtime   Showtime          @relation(fields: [showtimeId], references: [id])
+  showtimeId String
+  totalPrice Int
+  status     ReservationStatus @default(CONFIRMED)
+  createdAt  DateTime          @default(now())
+  seats      ReservationSeat[]
+
+  @@index([userId])
+  @@index([showtimeId])
+  @@map("reservations")
+}
+
+// seatId를 unique로 제약해 좌석 하나가 동시에 두 예매에 속하는 것을 DB 레벨에서 차단합니다.
+// (기능 구현 단계에서 트랜잭션 로직과 함께 사용 예정)
+model ReservationSeat {
+  id            String      @id @default(uuid())
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservationId String
+  seat          Seat        @relation(fields: [seatId], references: [id])
+  seatId        String      @unique
+
+  @@map("reservation_seats")
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
