@@ -1,14 +1,12 @@
 import request from "supertest";
 import { createApp } from "../../src/app";
 import { prisma } from "../../src/infra/prisma";
+import { assertTestDatabaseUrl } from "../helpers/assertTestDatabase";
 
 const app = createApp();
 
 async function resetDb() {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!url.includes("test")) {
-    throw new Error("테스트는 이름에 'test'가 포함된 DB에서만 실행합니다.");
-  }
+  assertTestDatabaseUrl(process.env.DATABASE_URL ?? "");
   await prisma.user.deleteMany();
 }
 
@@ -47,7 +45,7 @@ describe("POST /api/auth/register", () => {
       name: "B",
     });
     expect(res.status).toBe(409);
-    expect(res.body.error.code).toBe("EMAIL_TAKEN"); // 에러는 그대로 error.xxx
+    expect(res.body.error.code).toBe("EMAIL_TAKEN");
   });
 });
 
