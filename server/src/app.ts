@@ -5,6 +5,9 @@ import swaggerUi from "swagger-ui-express";
 import { errorHandler } from "./middleware/error.middleware";
 import { swaggerSpec } from "./infra/swagger";
 import authRoutes from "./auth/routes/auth.routes";
+import moviesRoutes from "./movies/routes/movies.routes";
+import theatersRoutes from "./movies/routes/theaters.routes";
+import showtimesRoutes from "./movies/routes/showtimes.routes";
 
 export function createApp() {
   const app = express();
@@ -19,6 +22,9 @@ export function createApp() {
 
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api/auth", authRoutes);
+  app.use("/api/movies", moviesRoutes);
+  app.use("/api/theaters", theatersRoutes);
+  app.use("/api/showtimes", showtimesRoutes);
 
   app.use((_req, res) => {
     res

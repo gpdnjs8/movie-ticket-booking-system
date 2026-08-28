@@ -1,7 +1,10 @@
 {
   "name": "movie-ticket-booking",
   "private": true,
-  "workspaces": ["server", "client"],
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -9,7 +12,8 @@
     "format:check": "prettier --check .",
     "dev:server": "npm run dev -w server",
     "dev:client": "npm run dev -w client",
-    "dev": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\""
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "prisma:migrate:test": "npm run prisma:migrate:test -w server"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
