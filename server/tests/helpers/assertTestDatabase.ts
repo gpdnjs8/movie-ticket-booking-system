@@ -10,7 +10,7 @@ export function assertTestDatabaseUrl(url: string) {
   try {
     databaseName = new URL(url).pathname.replace(/^\//, "");
   } catch {
-    throw new Error(`DATABASE_URL을 해석할 수 없습니다: ${url}`);
+    throw new Error(`DATABASE_URL을 해석할 수 없습니다`);
   }
 
   if (!ALLOWED_TEST_DATABASE_NAMES.includes(databaseName)) {
