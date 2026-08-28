@@ -62,6 +62,7 @@ model Seat {
   reservationSeats ReservationSeat[]
 
   @@unique([screenId, row, number])
+  @@unique([id, screenId]) 
   @@index([screenId])
   @@map("seats")
 }
@@ -98,6 +99,7 @@ model Showtime {
   reservations     Reservation[]
   reservationSeats ReservationSeat[]
 
+  @@unique([id, screenId]) 
   @@index([movieId])
   @@index([screenId])
   @@map("showtimes")
@@ -115,6 +117,7 @@ model Reservation {
   createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
   seats      ReservationSeat[]
 
+  @@unique([id, showtimeId]) 
   @@index([userId])
   @@index([showtimeId])
   @@map("reservations")
@@ -122,12 +125,14 @@ model Reservation {
 
 model ReservationSeat {
   id            BigInt      @id @default(autoincrement())
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
   reservationId BigInt      @map("reservation_id")
-  showtime      Showtime    @relation(fields: [showtimeId], references: [id])
   showtimeId    BigInt      @map("showtime_id")
-  seat          Seat        @relation(fields: [seatId], references: [id])
   seatId        BigInt      @map("seat_id")
+  screenId      BigInt      @map("screen_id")
+
+  reservation Reservation @relation(fields: [reservationId, showtimeId], references: [id, showtimeId])
+  showtime    Showtime    @relation(fields: [showtimeId, screenId], references: [id, screenId])
+  seat        Seat        @relation(fields: [seatId, screenId], references: [id, screenId])
 
   @@unique([showtimeId, seatId])
   @@map("reservation_seats")
