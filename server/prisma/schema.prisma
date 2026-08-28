@@ -8,80 +8,133 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  password     String
-  name         String
-  createdAt    DateTime      @default(now())
+  id           BigInt        @id @default(autoincrement())
+  email        String        @unique @db.VarChar(100)
+  password     String        @db.VarChar(100)
+  name         String        @db.VarChar(50)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime?     @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt    DateTime?     @map("deleted_at") @db.Timestamp(6)
   reservations Reservation[]
 
   @@map("users")
 }
 
+// 영화관 
+model Theater {
+  id        BigInt    @id @default(autoincrement())
+  name      String    @db.VarChar(100)
+  address   String?   @db.VarChar(200)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(6)
+  screens   Screen[]
+
+  @@map("theaters")
+}
+
+// 상영관 
+model Screen {
+  id        BigInt     @id @default(autoincrement())
+  theater   Theater    @relation(fields: [theaterId], references: [id])
+  theaterId BigInt     @map("theater_id")
+  name      String     @db.VarChar(50)
+  seatCount Int        @map("seat_count")
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime?  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt DateTime?  @map("deleted_at") @db.Timestamp(6)
+  seats     Seat[]
+  showtimes Showtime[]
+
+  @@unique([theaterId, name])
+  @@index([theaterId])
+  @@map("screens")
+}
+
+// 좌석 
+model Seat {
+  id               BigInt            @id @default(autoincrement())
+  screen           Screen            @relation(fields: [screenId], references: [id])
+  screenId         BigInt            @map("screen_id")
+  row              String            @db.VarChar(5)
+  number           Int
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  reservationSeats ReservationSeat[]
+
+  @@unique([screenId, row, number])
+  @@unique([id, screenId]) 
+  @@index([screenId])
+  @@map("seats")
+}
+
+// 영화
 model Movie {
-  id          String     @id @default(uuid())
-  title       String
-  genre       String
-  runtimeMin  Int
-  posterUrl   String?
+  id          BigInt     @id @default(autoincrement())
+  title       String     @db.VarChar(100)
+  genre       String     @db.VarChar(30)
+  runtimeMin  Int        @map("runtime_min")
+  score       Decimal    @default(0) @db.Decimal(2, 1)
+  releaseDate DateTime?  @map("release_date") @db.Date
+  posterUrl   String?    @map("poster_url") @db.VarChar(255)
   description String?
-  createdAt   DateTime   @default(now())
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime?  @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt   DateTime?  @map("deleted_at") @db.Timestamp(6)
   showtimes   Showtime[]
 
   @@map("movies")
 }
 
+// 상영
 model Showtime {
-  id           String        @id @default(uuid())
-  movie        Movie         @relation(fields: [movieId], references: [id])
-  movieId      String
-  screenName   String
-  startAt      DateTime
-  price        Int
-  seats        Seat[]
-  reservations Reservation[]
+  id               BigInt            @id @default(autoincrement())
+  movie            Movie             @relation(fields: [movieId], references: [id])
+  movieId          BigInt            @map("movie_id")
+  screen           Screen            @relation(fields: [screenId], references: [id])
+  screenId         BigInt            @map("screen_id")
+  startAt          DateTime          @map("start_at") @db.Timestamp(6)
+  endAt            DateTime          @map("end_at") @db.Timestamp(6)
+  price            Int
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
+  reservations     Reservation[]
+  reservationSeats ReservationSeat[]
 
+  @@unique([id, screenId]) 
   @@index([movieId])
+  @@index([screenId])
   @@map("showtimes")
 }
 
-model Seat {
-  id              String           @id @default(uuid())
-  showtime        Showtime         @relation(fields: [showtimeId], references: [id])
-  showtimeId      String
-  row             String
-  number          Int
-  reservationSeat ReservationSeat?
-
-  @@unique([showtimeId, row, number])
-  @@map("seats")
-}
-
+// 예매
 model Reservation {
-  id         String            @id @default(uuid())
+  id         BigInt            @id @default(autoincrement())
   user       User              @relation(fields: [userId], references: [id])
-  userId     String
+  userId     BigInt            @map("user_id")
   showtime   Showtime          @relation(fields: [showtimeId], references: [id])
-  showtimeId String
-  totalPrice Int
+  showtimeId BigInt            @map("showtime_id")
+  totalPrice Int               @map("total_price")
   status     ReservationStatus @default(CONFIRMED)
-  createdAt  DateTime          @default(now())
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamp(6)
   seats      ReservationSeat[]
 
+  @@unique([id, showtimeId]) 
   @@index([userId])
   @@index([showtimeId])
   @@map("reservations")
 }
 
-// seatId를 unique로 제약해 좌석 하나가 동시에 두 예매에 속하는 것을 DB 레벨에서 차단합니다.
-// (기능 구현 단계에서 트랜잭션 로직과 함께 사용 예정)
 model ReservationSeat {
-  id            String      @id @default(uuid())
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
-  reservationId String
-  seat          Seat        @relation(fields: [seatId], references: [id])
-  seatId        String      @unique
+  id            BigInt      @id @default(autoincrement())
+  reservationId BigInt      @map("reservation_id")
+  showtimeId    BigInt      @map("showtime_id")
+  seatId        BigInt      @map("seat_id")
+  screenId      BigInt      @map("screen_id")
 
+  reservation Reservation @relation(fields: [reservationId, showtimeId], references: [id, showtimeId])
+  showtime    Showtime    @relation(fields: [showtimeId, screenId], references: [id, screenId])
+  seat        Seat        @relation(fields: [seatId, screenId], references: [id, screenId])
+
+  @@unique([showtimeId, seatId])
   @@map("reservation_seats")
 }
 

@@ -1,20 +1,24 @@
 import express from "express";
 import cors from "cors";
-import { errorHandler } from "./middleware/error.middleware";
+import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
+import { errorHandler } from "./middleware/error.middleware";
 import { swaggerSpec } from "./infra/swagger";
+import authRoutes from "./auth/routes/auth.routes";
 
 export function createApp() {
   const app = express();
 
   app.use(cors());
   app.use(express.json());
+  app.use(cookieParser());
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
   });
 
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use("/api/auth", authRoutes);
 
   app.use((_req, res) => {
     res
