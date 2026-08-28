@@ -21,7 +21,7 @@ export const showtimeRepository = {
         startAt: { gte: start, lt: end },
         screen: {
           deletedAt: null,
-          theater: { deletedAt: null, ...(theaterId ? { id: theaterId } : {}) },
+          theater: { deletedAt: null, ...(theaterId !== undefined ? { id: theaterId } : {}) },
         },
       },
       include: { screen: { include: { theater: true } } },

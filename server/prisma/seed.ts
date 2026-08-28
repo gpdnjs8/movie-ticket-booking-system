@@ -34,7 +34,9 @@ const MOVIES: {
   { title: "오펜하이머", genre: "드라마", runtimeMin: 180, score: 4.7 },
 ];
 
-const DAILY_TIME_SLOTS = ["10:00", "12:30", "15:00", "17:30", "20:00", "22:30"];
+const OPENING_TIME = "10:00";
+const SHOWS_PER_DAY = 6;
+const CLEANUP_MINUTES = 20;
 const DAY_RANGE = 7;
 const FIXED_PRICE = 15000;
 
@@ -131,8 +133,9 @@ async function createShowtimes(
       const movieIndex = (dayOffset * SCREEN_NAMES.length + screenIndex) % movies.length;
       const movie = movies[movieIndex];
 
-      for (const hhmm of DAILY_TIME_SLOTS) {
-        const startAt = buildStartAt(baseDate, dayOffset, hhmm);
+      let startAt = buildStartAt(baseDate, dayOffset, OPENING_TIME);
+
+      for (let show = 0; show < SHOWS_PER_DAY; show += 1) {
         const endAt = new Date(startAt.getTime() + movie.runtimeMin * 60 * 1000);
 
         for (const theater of theaters) {
@@ -144,6 +147,8 @@ async function createShowtimes(
             price: FIXED_PRICE,
           });
         }
+
+        startAt = new Date(endAt.getTime() + CLEANUP_MINUTES * 60 * 1000);
       }
     }
   }

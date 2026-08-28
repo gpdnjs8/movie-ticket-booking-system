@@ -1,14 +1,12 @@
 import request from "supertest";
 import { createApp } from "../../src/app";
 import { prisma } from "../../src/infra/prisma";
+import { assertTestDatabaseUrl } from "../helpers/assertTestDatabase";
 
 const app = createApp();
 
 async function resetDb() {
-  const url = process.env.DATABASE_URL ?? "";
-  if (!url.includes("test")) {
-    throw new Error("테스트는 이름에 'test'가 포함된 DB에서만 실행합니다.");
-  }
+  assertTestDatabaseUrl(process.env.DATABASE_URL ?? "");
   await prisma.reservationSeat.deleteMany();
   await prisma.reservation.deleteMany();
   await prisma.showtime.deleteMany();
@@ -244,6 +242,24 @@ describe("GET /api/movies/:id/showtimes", () => {
       .get(`/api/movies/${movie.id}/showtimes`)
       .query({ date: "2026/08/29" });
     expect(res.status).toBe(400);
+  });
+
+  it("존재하지 않는 달력 날짜(예: 2월 30일)면 400을 반환한다", async () => {
+    const { movie } = await createMovieWithTwoTheaters();
+    const res = await request(app)
+      .get(`/api/movies/${movie.id}/showtimes`)
+      .query({ date: "2026-02-30" });
+    expect(res.status).toBe(400);
+  });
+
+  it("theaterId=0이면 필터가 무시되지 않고 빈 결과를 반환한다", async () => {
+    const { movie } = await createMovieWithTwoTheaters();
+    const res = await request(app)
+      .get(`/api/movies/${movie.id}/showtimes`)
+      .query({ date: "2026-08-29", theaterId: "0" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.theaters).toHaveLength(0);
   });
 });
 
