@@ -71,3 +71,4 @@ client/src/
 - [ ] axios `withCredentials: true`
 - [ ] ProtectedRoute — 좌석선택/예매내역은 비로그인 시 /login 리다이렉트
 - [ ] 영화/영화관 목록 — 무한스크롤(커서 기반) + useDebounce(검색 시) + 스켈레톤 UI
+- [ ] tailwindcss 사용
