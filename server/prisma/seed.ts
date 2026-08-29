@@ -113,8 +113,13 @@ function buildStartAt(baseDate: Date, dayOffset: number, hhmm: string) {
   return startAt;
 }
 
-function randomScreenIndex(): number {
-  return Math.floor(Math.random() * SCREEN_NAMES.length);
+function shuffledIndexes(length: number): number[] {
+  const indexes = Array.from({ length }, (_, i) => i);
+  for (let i = indexes.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+  }
+  return indexes;
 }
 
 async function createShowtimes(
@@ -135,14 +140,13 @@ async function createShowtimes(
   for (let dayOffset = 0; dayOffset < DAY_RANGE; dayOffset += 1) {
     for (let theaterIndex = 0; theaterIndex < theaters.length; theaterIndex += 1) {
       const theater = theaters[theaterIndex];
-
-      // 영화관마다 시작 시각을 조금씩 어긋나게 줘서 스케줄이 완전히 똑같아 보이지 않게 한다.
       const theaterOffsetMinutes = theaterIndex * 7;
+      const screenOrder = shuffledIndexes(SCREEN_NAMES.length);
 
       for (let slot = 0; slot < SCREEN_NAMES.length; slot += 1) {
-        // 영화 배정은 영화관과 무관하게 정한다 → 같은 영화가 그날 영화관 5곳 전부에 걸린다.
         const movieIndex = (dayOffset * SCREEN_NAMES.length + slot) % movies.length;
         const movie = movies[movieIndex];
+        const screenIndex = screenOrder[slot];
 
         let startAt = new Date(
           buildStartAt(baseDate, dayOffset, OPENING_TIME).getTime() +
@@ -151,9 +155,6 @@ async function createShowtimes(
 
         for (let show = 0; show < SHOWS_PER_DAY; show += 1) {
           const endAt = new Date(startAt.getTime() + movie.runtimeMin * 60 * 1000);
-
-          // 같은 영화라도 회차마다 상영관을 무작위로 배정한다.
-          const screenIndex = randomScreenIndex();
 
           showtimeRows.push({
             movieId: movie.id,

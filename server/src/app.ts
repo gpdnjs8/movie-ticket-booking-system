@@ -13,7 +13,9 @@ import reservationsRoutes from "./reservations/routes/reservations.routes";
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
+  const corsOrigin = process.env.CORS_ORIGIN;
+
+  app.use(cors({ origin: corsOrigin, credentials: true }));
   app.use(express.json());
   app.use(cookieParser());
 

@@ -62,7 +62,7 @@ client/src/
 
 ### 3. reservations — 흐름: 영화 → 영화관/상영시간 → 좌석
 
-- [x] POST /api/reservations — seatIds 1~6개, 트랜잭션 + `(showtimeId, seatId)` unique 제약으로 중복예매 차단, 이미 예약 시 409
+- [x] POST /api/reservations — seatIds 1~6개(최대 6개), 트랜잭션 + `(showtimeId, seatId)` unique 제약으로 중복예매 차단, 이미 예약 시 409
 - [x] **동시성 테스트 필수**: 동시 요청 시 1건만 201, 나머지 409 (실제 PostgreSQL)
 - [x] GET /api/reservations/me — req.user.userId 기준 최신순
 
