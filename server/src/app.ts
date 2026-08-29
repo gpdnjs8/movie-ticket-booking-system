@@ -8,6 +8,7 @@ import authRoutes from "./auth/routes/auth.routes";
 import moviesRoutes from "./movies/routes/movies.routes";
 import theatersRoutes from "./movies/routes/theaters.routes";
 import showtimesRoutes from "./movies/routes/showtimes.routes";
+import reservationsRoutes from "./reservations/routes/reservations.routes";
 
 export function createApp() {
   const app = express();
@@ -25,6 +26,7 @@ export function createApp() {
   app.use("/api/movies", moviesRoutes);
   app.use("/api/theaters", theatersRoutes);
   app.use("/api/showtimes", showtimesRoutes);
+  app.use("/api/reservations", reservationsRoutes);
 
   app.use((_req, res) => {
     res
