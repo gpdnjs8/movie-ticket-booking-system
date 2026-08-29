@@ -15,9 +15,9 @@
 server/src/<domain>/
 ├── controller/ ← 요청 파싱, 응답만. 비즈니스 로직 넣지 않는다.
 ├── service/ ← 비즈니스 로직. AppError로 에러를 던진다.
-├── repository/ ← Prisma 쿼리만. 여기서만 DB에 접근한다.
+├── repository/ ← Prisma 쿼리만. 여기서만 DB에 접근
 ├── dto/ ← zod 스키마로 요청 검증 + 타입 정의
-└── <domain>.routes.ts
+└── routes/ ← api 라우팅
 
 공통 코드는 도메인 폴더 밖에 둔다: `errors/error.ts`, `middleware/`, `infra/prisma.ts`, `types/`.
 
@@ -35,6 +35,12 @@ client/src/
 - 성공 응답은 `common/response.ts`의 `sendSuccess(res, statusCode, data)`로 통일한다.
   모든 성공 응답은 `{ data: ... }` 형태다. 컨트롤러에서 `res.status().json()`을 직접 쓰지 않는다.
 - 커밋 메시지: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`
+
+## 에러 응답 형식
+
+```json
+{ "error": { "code": "SEAT_ALREADY_BOOKED", "message": "이미 예약된 좌석이 포함되어 있습니다." } }
+```
 
 ---
 
@@ -56,18 +62,12 @@ client/src/
 
 ### 3. reservations — 흐름: 영화 → 영화관/상영시간 → 좌석
 
-- [ ] POST /api/reservations — seatIds 1~20개, 트랜잭션 + `(showtimeId, seatId)` unique 제약으로 중복예매 차단, 이미 예약 시 409
-- [ ] **동시성 테스트 필수**: 동시 요청 시 1건만 201, 나머지 409 (실제 PostgreSQL)
-- [ ] GET /api/reservations/me — req.user.userId 기준 최신순
+- [x] POST /api/reservations — seatIds 1~6개, 트랜잭션 + `(showtimeId, seatId)` unique 제약으로 중복예매 차단, 이미 예약 시 409
+- [x] **동시성 테스트 필수**: 동시 요청 시 1건만 201, 나머지 409 (실제 PostgreSQL)
+- [x] GET /api/reservations/me — req.user.userId 기준 최신순
 
 ### 4. 프론트엔드
 
 - [ ] axios `withCredentials: true`
 - [ ] ProtectedRoute — 좌석선택/예매내역은 비로그인 시 /login 리다이렉트
 - [ ] 영화/영화관 목록 — 무한스크롤(커서 기반) + useDebounce(검색 시) + 스켈레톤 UI
-
-## 에러 응답 형식
-
-```json
-{ "error": { "code": "SEAT_ALREADY_BOOKED", "message": "이미 예약된 좌석이 포함되어 있습니다." } }
-```
