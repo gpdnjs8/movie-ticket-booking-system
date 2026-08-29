@@ -16,14 +16,14 @@ function MyReservationsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-5 py-7">
+      <div className="px-[100px] py-7">
         <LoadingSpinner label="예매 내역을 불러오는 중이에요" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-7 pb-16">
+    <div className="px-[100px] py-7 pb-16">
       <h2 className="mb-5 text-xl font-bold">내 예매 내역</h2>
 
       {reservations.length === 0 && (

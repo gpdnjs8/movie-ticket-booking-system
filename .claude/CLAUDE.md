@@ -57,7 +57,7 @@ client/src/
 ### 2. movies — 커서 기반 페이지네이션
 
 - [x] GET /api/movies, /api/theaters — `?cursor&take` 커서 페이지네이션, `nextCursor` 응답 포함
-- [x] GET /api/movies/:id/showtimes — 영화관 단위로 그룹핑, 상영관/날짜는 응답 필드로만 포함(프론트에서 필터링)
+- [x] GET /api/movies/:id/showtimes — 영화관 단위로 그룹핑, `?date&theaterId` 쿼리로 서버에서 필터링(date 생략 시 오늘)
 - [x] GET /api/showtimes/:id/seats — 좌석 + isBooked
 
 ### 3. reservations — 흐름: 영화 → 영화관/상영시간 → 좌석
@@ -68,7 +68,7 @@ client/src/
 
 ### 4. 프론트엔드
 
-- [ ] axios `withCredentials: true`
-- [ ] ProtectedRoute — 좌석선택/예매내역은 비로그인 시 /login 리다이렉트
-- [ ] 영화/영화관 목록 — 무한스크롤(커서 기반) + 스켈레톤 UI
-- [ ] tailwindcss 사용
+- [x] axios `withCredentials: true`
+- [x] ProtectedRoute — 좌석선택/예매내역은 비로그인 시 /login 리다이렉트
+- [x] 영화/영화관 목록 — 무한스크롤(커서 기반) + 스켈레톤 UI
+- [x] tailwindcss 사용

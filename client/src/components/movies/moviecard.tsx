@@ -1,19 +1,19 @@
 import { Link } from "react-router-dom";
 import { MovieListItem } from "../../types/movie";
-import { posterGradient } from "../../utils/mockdata";
-import { ROUTES } from "../../routes/router";
 
 function MovieCard({ movie }: { movie: MovieListItem }) {
   return (
     <Link
-      to={ROUTES.movieDetail(movie.id)}
+      to={`/movies/detail/${movie.id}`}
       className="block overflow-hidden rounded-xl border border-border bg-surface transition-transform hover:-translate-y-1 hover:border-primary"
     >
-      <div
-        className="relative flex aspect-[2/3] items-end p-2"
-        style={{ background: posterGradient(movie.id) }}
-      >
-        <span className="rounded-full bg-black/55 px-2 py-0.5 text-xs font-bold text-amber-300">
+      <div className="relative flex aspect-[2/3] items-end p-2">
+        <img
+          src={movie.posterUrl ?? undefined}
+          alt={movie.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <span className="relative rounded-full bg-black/55 px-2 py-0.5 text-xs font-bold text-amber-300">
           ★ {movie.score}
         </span>
       </div>

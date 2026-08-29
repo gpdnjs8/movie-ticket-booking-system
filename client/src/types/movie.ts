@@ -7,8 +7,3 @@ export interface MovieListItem {
   releaseDate: string | null;
   posterUrl: string | null;
 }
-
-export interface Theater {
-  id: string;
-  name: string;
-}

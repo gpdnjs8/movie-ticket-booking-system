@@ -39,12 +39,12 @@ function MoviesPage() {
   const sentinelRef = useInfiniteScroll({ hasMore, loading: initialLoading || moreLoading, onLoadMore: loadMore });
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-7 pb-16">
+    <div className="px-[100px] py-7 pb-16">
       <div className="mb-5 flex items-center justify-between gap-4">
         <h2 className="text-xl font-bold">영화 목록</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
         {initialLoading
           ? Array.from({ length: 12 }, (_, i) => <MovieCardSkeleton key={i} />)
           : movies.map((movie) => <MovieCard key={movie.id} movie={movie} />)}

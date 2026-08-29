@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerSchema } from "../../schemas/auth";
 import { register } from "../../apis/auth/auth";
 import { useAuth } from "../../context/auth";
-import { ROUTES } from "../../routes/router";
+import { getErrorMessage } from "../../utils/errorMessage";
 
 function RegisterPage() {
   const { loginSuccess } = useAuth();
@@ -11,6 +11,7 @@ function RegisterPage() {
 
   const [form, setForm] = useState({ email: "", password: "", name: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -25,21 +26,27 @@ function RegisterPage() {
       return;
     }
     setErrors({});
+    setSubmitError("");
     setSubmitting(true);
-    const res = await register(parsed.data);
-    setSubmitting(false);
-    loginSuccess(res.user, res.accessToken);
-    navigate(ROUTES.movies, { replace: true });
+    try {
+      const res = await register(parsed.data);
+      loginSuccess(res.user, res.accessToken);
+      navigate("/", { replace: true });
+    } catch (error) {
+      setSubmitError(getErrorMessage(error, "회원가입에 실패했습니다."));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =
-    "rounded-lg border border-border bg-surface2 px-3 py-2.5 text-sm outline-none focus:border-primary";
+    "rounded-lg border border-border bg-surface2 px-4 py-3 text-base outline-none focus:border-primary";
 
   return (
-    <div className="mx-auto max-w-[420px] px-5 py-7">
-      <h2 className="mb-6 text-xl font-bold">회원가입</h2>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-1.5 text-[13px] text-muted">
+    <div className="mx-auto max-w-[480px] px-2 py-10">
+      <h2 className="mb-8 text-2xl font-bold">회원가입</h2>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <label className="flex flex-col gap-2 text-sm text-muted">
           이름
           <input
             type="text"
@@ -47,9 +54,9 @@ function RegisterPage() {
             onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             className={inputClass}
           />
-          {errors.name && <span className="text-xs text-primary">{errors.name}</span>}
+          {errors.name && <span className="text-sm text-primary">{errors.name}</span>}
         </label>
-        <label className="flex flex-col gap-1.5 text-[13px] text-muted">
+        <label className="flex flex-col gap-2 text-sm text-muted">
           이메일
           <input
             type="email"
@@ -57,9 +64,9 @@ function RegisterPage() {
             onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
             className={inputClass}
           />
-          {errors.email && <span className="text-xs text-primary">{errors.email}</span>}
+          {errors.email && <span className="text-sm text-primary">{errors.email}</span>}
         </label>
-        <label className="flex flex-col gap-1.5 text-[13px] text-muted">
+        <label className="flex flex-col gap-2 text-sm text-muted">
           비밀번호
           <input
             type="password"
@@ -67,19 +74,20 @@ function RegisterPage() {
             onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
             className={inputClass}
           />
-          {errors.password && <span className="text-xs text-primary">{errors.password}</span>}
+          {errors.password && <span className="text-sm text-primary">{errors.password}</span>}
         </label>
+        {submitError && <p className="text-sm text-primary">{submitError}</p>}
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-primary py-3 mt-10 text-base font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? "가입 중..." : "회원가입"}
         </button>
       </form>
-      <p className="mt-4 text-center text-[13px] text-muted">
+      <p className="mt-5 text-center text-sm text-muted">
         이미 계정이 있으신가요?{" "}
-        <Link to={ROUTES.login} className="font-semibold text-primary">
+        <Link to="/login" className="font-semibold text-primary">
           로그인
         </Link>
       </p>

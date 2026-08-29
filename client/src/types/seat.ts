@@ -7,5 +7,6 @@ export interface Seat {
 
 export interface ShowtimeSeatsResponse {
   showtimeId: string;
+  price: number;
   seats: Seat[];
 }
