@@ -32,7 +32,7 @@ client/src/
 - TypeScript strict 모드. `any` 최소화.
 - 에러는 항상 `AppError`를 던진다. 컨트롤러에서 `res.status()` 직접 쓰지 않는다.
 - 새 API 만들면 swagger 문서화도 진행한다.
-- 성공 응답은 `common/response.ts`의 `sendSuccess(res, statusCode, data)`로 통일한다.
+- 성공 응답은 `common/response.ts`의 `success(res, statusCode, data)`로 통일한다.
   모든 성공 응답은 `{ data: ... }` 형태다. 컨트롤러에서 `res.status().json()`을 직접 쓰지 않는다.
 - 커밋 메시지: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`
 

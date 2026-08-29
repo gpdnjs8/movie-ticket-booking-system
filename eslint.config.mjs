@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import prettierConfig from "eslint-config-prettier";
+import globals from "globals";
 
 export default tseslint.config(
   { ignores: ["**/dist", "**/node_modules", "**/build", "**/coverage", "**/prisma/migrations"] },
@@ -29,6 +30,13 @@ export default tseslint.config(
     files: ["server/**/*.ts"],
     rules: {
       "no-console": ["warn", { allow: ["warn", "error"] }],
+    },
+  },
+  {
+    files: ["**/*.config.js", "**/*.config.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: globals.node,
     },
   },
   prettierConfig
