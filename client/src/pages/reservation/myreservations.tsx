@@ -2,22 +2,39 @@ import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/loadingspinner";
 import { fetchMyReservations } from "../../apis/reservation/reservation";
 import { MyReservationItem } from "../../types/reservation";
+import { getErrorMessage } from "../../utils/errorMessage";
+import { formatDateTime } from "../../utils/formatDate";
 
 function MyReservationsPage() {
   const [reservations, setReservations] = useState<MyReservationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    fetchMyReservations({}).then((page) => {
-      setReservations(page.items);
-      setLoading(false);
-    });
+    fetchMyReservations({})
+      .then((page) => {
+        setReservations(page.items);
+      })
+      .catch((error) => {
+        setLoadError(getErrorMessage(error, "예매 내역을 불러오지 못했습니다."));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
     return (
       <div className="px-[100px] py-7">
         <LoadingSpinner label="예매 내역을 불러오는 중이에요" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="px-[100px] py-7">
+        <p className="py-16 text-center text-sm text-primary">{loadError}</p>
       </div>
     );
   }
@@ -40,7 +57,7 @@ function MyReservationsPage() {
               <h3 className="mb-1.5 text-[15px] font-semibold">{reservation.movieTitle}</h3>
               <p className="my-0.5 text-[13px] text-muted">
                 {reservation.theaterName} · {reservation.screenName} ·{" "}
-                {reservation.startAt.slice(0, 16).replace("T", " ")}
+                {formatDateTime(reservation.startAt)}
               </p>
               <p className="my-0.5 text-[13px] text-muted">
                 좌석: {reservation.seats.map((s) => `${s.row}${s.number}`).join(", ")}

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/loadingspinner";
 import { fetchShowtimesByMovie } from "../../apis/movies/showtime";
 import { MovieShowtimesResponse } from "../../types/showtime";
+import { formatTime } from "../../utils/formatDate";
 
 function todayDateString(): string {
   const now = new Date();
@@ -44,7 +45,13 @@ function MovieShowtimesPage() {
   const selectClass =
     "rounded-lg border border-border bg-surface2 px-3 py-2 text-[13px] outline-none focus:border-primary";
 
-  const theaters = data?.theaters ?? [];
+  const now = new Date();
+  const theaters = (data?.theaters ?? [])
+    .map((theater) => ({
+      ...theater,
+      showtimes: theater.showtimes.filter((showtime) => new Date(showtime.startAt) > now),
+    }))
+    .filter((theater) => theater.showtimes.length > 0);
 
   return (
     <div className="px-[100px] py-7 pb-16">
@@ -87,7 +94,7 @@ function MovieShowtimesPage() {
                   onClick={() => navigate(`/showtimes/${showtime.id}/seats`)}
                   className="flex flex-col items-center gap-0.5 rounded-lg border border-border bg-surface px-3.5 py-2 hover:border-primary"
                 >
-                  <span className="text-sm">{showtime.startAt.slice(11, 16)}</span>
+                  <span className="text-sm">{formatTime(showtime.startAt)}</span>
                   <small className="text-[11px] text-muted">{showtime.screenName}</small>
                 </button>
               ))}

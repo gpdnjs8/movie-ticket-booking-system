@@ -24,7 +24,7 @@ server/src/<domain>/
 프론트엔드는 레이어 우선 구조를 쓴다:
 
 client/src/
-├── apis/ components/ constants/ hooks/ layouts/
+├── apis/ components/ context/ hooks/ layouts/
 ├── pages/ routes/ schemas/ styles/ types/ utils/
 
 ## 코딩 규칙
@@ -58,7 +58,7 @@ client/src/
 
 - [x] GET /api/movies, /api/theaters — `?cursor&take` 커서 페이지네이션, `nextCursor` 응답 포함
 - [x] GET /api/movies/:id/showtimes — 영화관 단위로 그룹핑, `?date&theaterId` 쿼리로 서버에서 필터링(date 생략 시 오늘)
-- [x] GET /api/showtimes/:id/seats — 좌석 + isBooked
+- [x] GET /api/showtimes/:id/seats — 좌석 + isBooked, 상영 가격(price) 포함
 
 ### 3. reservations — 흐름: 영화 → 영화관/상영시간 → 좌석
 
@@ -70,5 +70,5 @@ client/src/
 
 - [x] axios `withCredentials: true`
 - [x] ProtectedRoute — 좌석선택/예매내역은 비로그인 시 /login 리다이렉트
-- [x] 영화/영화관 목록 — 무한스크롤(커서 기반) + 스켈레톤 UI
+- [x] 영화 목록 — 무한스크롤(커서 기반) + 스켈레톤 UI (영화관 목록 페이지는 프론트에 없음, `/api/theaters` 미사용)
 - [x] tailwindcss 사용

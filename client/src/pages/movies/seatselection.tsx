@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../components/loadingspinner";
 import { fetchSeatsByShowtime } from "../../apis/movies/seat";
@@ -17,16 +17,25 @@ function SeatSelectionPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (!showtimeId) return;
     setLoading(true);
-    fetchSeatsByShowtime(showtimeId).then((res) => {
-      setSeats(res.seats);
-      setPricePerSeat(res.price);
-      setLoading(false);
-    });
+    setLoadError("");
+    fetchSeatsByShowtime(showtimeId)
+      .then((res) => {
+        setSeats(res.seats);
+        setPricePerSeat(res.price);
+      })
+      .catch((error) => {
+        setLoadError(getErrorMessage(error, "좌석 정보를 불러오지 못했습니다."));
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [showtimeId]);
 
   const rows = useMemo(() => {
@@ -38,24 +47,39 @@ function SeatSelectionPage() {
     return Array.from(grouped.entries());
   }, [seats]);
 
+  useEffect(() => {
+    return () => clearTimeout(toastTimer.current);
+  }, []);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(""), 2500);
+  };
+
   const toggleSeat = (seat: Seat) => {
-    if (seat.isBooked) return;
+    if (seat.isBooked) {
+      showToast("이미 예약된 좌석입니다.");
+      return;
+    }
     setSelectedSeatIds((prev) => {
       if (prev.includes(seat.id)) return prev.filter((id) => id !== seat.id);
-      if (prev.length >= MAX_SEATS) return prev;
+      if (prev.length >= MAX_SEATS) {
+        showToast(`최대 ${MAX_SEATS}석까지 선택할 수 있어요.`);
+        return prev;
+      }
       return [...prev, seat.id];
     });
   };
 
   const handleSubmit = async () => {
     if (!showtimeId || selectedSeatIds.length === 0) return;
-    setSubmitError("");
     setSubmitting(true);
     try {
       await createReservation(showtimeId, selectedSeatIds);
       navigate("/reservations/me");
     } catch (error) {
-      setSubmitError(getErrorMessage(error, "예매에 실패했습니다."));
+      showToast(getErrorMessage(error, "예매에 실패했습니다."));
     } finally {
       setSubmitting(false);
     }
@@ -69,6 +93,14 @@ function SeatSelectionPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="px-[100px] py-7">
+        <p className="py-16 text-center text-sm text-primary">{loadError}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="px-[100px] py-7 pb-16">
       <h2 className="text-xl font-bold">좌석 선택</h2>
@@ -78,7 +110,12 @@ function SeatSelectionPage() {
         SCREEN
       </div>
 
-      <div className="mb-5 flex flex-col items-center gap-2">
+      <div className="relative mb-5 flex flex-col items-center gap-2">
+        {toastMessage && (
+          <div className="absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-[calc(100%+12px)] rounded-lg border border-primary bg-surface px-5 py-3 text-sm font-medium shadow-lg">
+            {toastMessage}
+          </div>
+        )}
         {rows.map(([row, rowSeats]) => (
           <div key={row} className="flex items-center gap-1.5">
             <span className="w-[18px] text-center text-xs text-muted">{row}</span>
@@ -88,11 +125,10 @@ function SeatSelectionPage() {
                 <button
                   key={seat.id}
                   type="button"
-                  disabled={seat.isBooked}
                   onClick={() => toggleSeat(seat)}
                   className={`h-[30px] w-[30px] rounded-md border text-[11px] ${
                     seat.isBooked
-                      ? "cursor-not-allowed border-border bg-[#2a2d33] text-[#55585f]"
+                      ? "border-border bg-[#2a2d33] text-[#55585f]"
                       : isSelected
                         ? "border-primary bg-primary text-white"
                         : "border-border bg-surface2 text-muted"
@@ -119,8 +155,6 @@ function SeatSelectionPage() {
           예약됨
         </span>
       </div>
-
-      {submitError && <p className="mb-3 text-center text-sm text-primary">{submitError}</p>}
 
       <div className="sticky bottom-0 flex items-center justify-between rounded-xl border border-border bg-surface px-5 py-4">
         <div>
