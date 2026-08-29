@@ -12,9 +12,6 @@ const router = Router();
  *     summary: 좌석 예매
  *     description: >
  *       상영시간(showtimeId)과 좌석 목록(seatIds, 1~6개, 중복 불가)을 받아 예매를 생성한다.
- *       이미 예약된 좌석이 포함되어 있으면 409(SEAT_ALREADY_BOOKED)를 반환한다.
- *       DB의 (showtimeId, seatId) unique 제약과 트랜잭션 처리로, 같은 좌석에 대한 동시 요청이
- *       들어와도 정확히 한 건만 성공(201)하고 나머지는 모두 409로 처리된다.
  *     tags: [Reservations]
  *     security:
  *       - bearerAuth: []
@@ -67,8 +64,7 @@ router.post("/", requireAuth, asyncHandler(reservationController.create));
  * @openapi
  * /api/reservations/me:
  *   get:
- *     summary: 내 예매 내역 조회
- *     description: 로그인한 사용자 본인(req.user.userId)의 예매 내역만 최신순, 커서 기반으로 조회한다.
+ *     summary: 예매 내역 조회
  *     tags: [Reservations]
  *     security:
  *       - bearerAuth: []

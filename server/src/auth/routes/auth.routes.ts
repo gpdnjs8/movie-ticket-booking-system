@@ -55,7 +55,7 @@ router.post("/login", asyncHandler(authController.login));
  * @openapi
  * /api/auth/refresh:
  *   post:
- *     summary: accessToken 재발급 (refreshToken은 쿠키에서 자동으로 읽음, 요청 바디 없음)
+ *     summary: accessToken 재발급
  *     tags: [Auth]
  *     responses:
  *       200: { description: 재발급 성공 }
@@ -67,7 +67,7 @@ router.post("/refresh", asyncHandler(authController.refresh));
  * @openapi
  * /api/auth/logout:
  *   post:
- *     summary: 로그아웃 (refreshToken 쿠키 삭제)
+ *     summary: 로그아웃
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
