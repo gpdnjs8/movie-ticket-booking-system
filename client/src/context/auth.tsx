@@ -1,30 +1,74 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { User } from "../types/auth";
+import { logout as logoutRequest } from "../apis/auth/auth";
+import { AUTH_LOGOUT_EVENT, refreshAccessToken } from "../apis/axiosInstance";
 
 interface AuthContextValue {
   user: User | null;
   isLoggedIn: boolean;
+  isRestoring: boolean;
   loginSuccess: (user: User, accessToken: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function readCachedUser(): User | null {
+  const raw = localStorage.getItem("user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
 
-  const loginSuccess = (nextUser: User, accessToken: string) => {
-    localStorage.setItem("token", accessToken);
-    setUser(nextUser);
-  };
-
-  const logout = () => {
+  const clearSession = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
+  const loginSuccess = (nextUser: User, accessToken: string) => {
+    localStorage.setItem("token", accessToken);
+    localStorage.setItem("user", JSON.stringify(nextUser));
+    setUser(nextUser);
+  };
+
+  const logout = async () => {
+    try {
+      await logoutRequest();
+    } finally {
+      clearSession();
+    }
+  };
+
+  useEffect(() => {
+    const cachedUser = readCachedUser();
+    if (!cachedUser) {
+      setIsRestoring(false);
+      return;
+    }
+
+    refreshAccessToken()
+      .then(() => setUser(cachedUser))
+      .catch(() => clearSession())
+      .finally(() => setIsRestoring(false));
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener(AUTH_LOGOUT_EVENT, clearSession);
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, clearSession);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: user !== null, loginSuccess, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoggedIn: user !== null, isRestoring, loginSuccess, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

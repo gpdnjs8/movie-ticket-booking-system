@@ -9,15 +9,6 @@ import LoginPage from "../pages/auth/login";
 import RegisterPage from "../pages/auth/register";
 import NotFoundPage from "../pages/notfound";
 
-export const ROUTES = {
-  movies: "/",
-  movieDetail: (movieId: string) => `/movies/detail/${movieId}`,
-  seats: (showtimeId: string) => `/showtimes/${showtimeId}/seats`,
-  myReservations: "/reservations/me",
-  login: "/login",
-  register: "/register",
-};
-
 export const router = createBrowserRouter([
   {
     path: "/",

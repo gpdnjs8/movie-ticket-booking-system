@@ -1,9 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth";
-import { ROUTES } from "../routes/router";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `border-b-2 pb-1.5 text-sm font-medium ${
+  `border-b-2 py-1.5 text-base font-medium leading-none ${
     isActive ? "border-primary text-white" : "border-transparent text-headerMuted"
   }`;
 
@@ -11,22 +10,22 @@ function Header() {
   const { isLoggedIn, user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate(ROUTES.movies);
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   return (
     <header className="sticky top-0 z-10 border-b border-headerBorder bg-header text-white">
-      <div className="mx-auto flex max-w-5xl items-center gap-8 px-5 py-3.5">
-        <NavLink to={ROUTES.movies} className="whitespace-nowrap text-lg font-bold">
+      <div className="flex items-center gap-8 px-[100px] py-5">
+        <NavLink to="/" className="whitespace-nowrap text-xl font-bold">
           영화 티켓 예매 시스템
         </NavLink>
         <nav className="flex flex-1 gap-5">
-          <NavLink to={ROUTES.movies} end className={navLinkClass}>
+          <NavLink to="/" end className={navLinkClass}>
             영화 목록
           </NavLink>
-          <NavLink to={ROUTES.myReservations} className={navLinkClass}>
+          <NavLink to="/reservations/me" className={navLinkClass}>
             내 예매 내역
           </NavLink>
         </nav>
@@ -44,7 +43,7 @@ function Header() {
             </>
           ) : (
             <NavLink
-              to={ROUTES.login}
+              to="/login"
               className="rounded-lg border border-headerBorder bg-headerSurface2 px-4 py-2 text-sm font-semibold hover:bg-headerBorder"
             >
               로그인
