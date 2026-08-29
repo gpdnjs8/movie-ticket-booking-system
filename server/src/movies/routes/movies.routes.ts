@@ -54,8 +54,7 @@ router.get("/", asyncHandler(movieController.list));
  *   get:
  *     summary: 영화 상영시간 조회
  *     description: >
- *       특정 영화를 특정 날짜에 상영 중인 영화관 목록과, 각 영화관별 상영시간(상영관/시작·종료 시각/가격)을 반환한다.
- *       date를 생략하면 오늘 날짜로 조회한다. 응답 크기를 하루 단위로 제한하기 위한 설계다.
+ *       특정 영화를 특정 날짜에 상영 중인 영화관 목록과 각 영화관별 상영시간 목록을 반환한다.
  *     tags: [Movies]
  *     parameters:
  *       - in: path
@@ -66,11 +65,11 @@ router.get("/", asyncHandler(movieController.list));
  *       - in: query
  *         name: date
  *         schema: { type: string, format: date }
- *         description: 조회할 날짜(YYYY-MM-DD). 생략 시 오늘 날짜
+ *         description: 조회할 날짜(YYYY-MM-DD) (생략 시 오늘 날짜)
  *       - in: query
  *         name: theaterId
  *         schema: { type: string }
- *         description: 특정 영화관으로 좁혀서 조회 (생략 시 전체 영화관)
+ *         description: 특정 영화관 id (생략 시 전체 영화관)
  *     responses:
  *       200:
  *         description: 상영시간 조회 성공

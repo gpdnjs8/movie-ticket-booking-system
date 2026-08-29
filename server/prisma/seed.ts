@@ -162,6 +162,7 @@ async function main() {
   const movies = await createMovies();
   const theaters = await createTheatersWithScreensAndSeats();
   const showtimeCount = await createShowtimes(theaters, movies);
+  // eslint-disable-next-line no-console -- 시드 완료 알림용 의도된 로그
   console.log(
     `시드 완료: 영화관 ${THEATER_NAMES.length}개(모두 동일한 스케줄), 상영관 ${SCREEN_NAMES.length}개/관, ` +
       `영화 ${MOVIES.length}개, 상영시간 총 ${showtimeCount}개`

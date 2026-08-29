@@ -38,8 +38,10 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     .json({ error: { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다." } });
 }
 
+type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<unknown>;
+
 // async 라우트 핸들러의 예외를 next(err)로 전달하기 위한 래퍼
-export function asyncHandler<T extends (...args: any[]) => Promise<any>>(fn: T) {
+export function asyncHandler(fn: AsyncRequestHandler) {
   return (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next).catch(next);
   };

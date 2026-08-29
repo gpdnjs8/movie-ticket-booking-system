@@ -8,8 +8,8 @@ const router = Router();
  * @openapi
  * /api/showtimes/{id}/seats:
  *   get:
- *     summary: 상영 회차의 좌석 목록 조회 (예매 여부 포함)
- *     description: 좌석마다 isBooked로 예약 여부를 표시한다. 실제 좌석 선점(중복 예매 차단, 409)은 예매 생성 API에서 처리한다.
+ *     summary: 상영 회차의 좌석 목록 조회
+ *     description: 좌석마다 isBooked로 예약 여부를 표시한다.
  *     tags: [Showtimes]
  *     parameters:
  *       - in: path
