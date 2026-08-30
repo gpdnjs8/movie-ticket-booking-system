@@ -44,7 +44,6 @@ export function verifyRefreshToken(token: string): RefreshTokenPayload {
   return jwt.verify(token, REFRESH_TOKEN_SECRET) as RefreshTokenPayload;
 }
 
-// 쿠키의 maxAge(ms 단위) 설정에 사용
 export function getRefreshTokenMaxAgeMs(): number {
   const match = /^(\d+)([smhd])$/.exec(REFRESH_TOKEN_EXPIRES_IN);
   if (!match) return 7 * 24 * 60 * 60 * 1000;

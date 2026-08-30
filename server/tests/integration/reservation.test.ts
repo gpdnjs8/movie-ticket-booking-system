@@ -221,6 +221,55 @@ describe("POST /api/reservations", () => {
     const reservationCount = await prisma.reservation.count({ where: { showtimeId: showtime.id } });
     expect(reservationCount).toBe(1);
   });
+
+  it("같은 상영에 이미 예매한 좌석과 합쳐 6석을 넘으면 400 SEAT_LIMIT_EXCEEDED를 반환한다", async () => {
+    const { showtime, seats } = await createShowtimeWithSeats(8);
+    const token = await registerAndLogin("limit@example.com");
+
+    const first = await request(app)
+      .post("/api/reservations")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        showtimeId: showtime.id.toString(),
+        seatIds: [seats[0].id.toString(), seats[1].id.toString()],
+      });
+    expect(first.status).toBe(201);
+
+    const second = await request(app)
+      .post("/api/reservations")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        showtimeId: showtime.id.toString(),
+        seatIds: seats.slice(2, 8).map((s) => s.id.toString()), // 2(기존) + 6(신규) = 8 > 6
+      });
+
+    expect(second.status).toBe(400);
+    expect(second.body.error.code).toBe("SEAT_LIMIT_EXCEEDED");
+  });
+
+  it("이미 예매한 좌석과 합쳐 정확히 6석이면 성공한다(경계값)", async () => {
+    const { showtime, seats } = await createShowtimeWithSeats(8);
+    const token = await registerAndLogin("boundary@example.com");
+
+    const first = await request(app)
+      .post("/api/reservations")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        showtimeId: showtime.id.toString(),
+        seatIds: [seats[0].id.toString(), seats[1].id.toString()],
+      });
+    expect(first.status).toBe(201);
+
+    const second = await request(app)
+      .post("/api/reservations")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        showtimeId: showtime.id.toString(),
+        seatIds: seats.slice(2, 6).map((s) => s.id.toString()), // 2(기존) + 4(신규) = 6
+      });
+
+    expect(second.status).toBe(201);
+  });
 });
 
 describe("GET /api/reservations/me", () => {
