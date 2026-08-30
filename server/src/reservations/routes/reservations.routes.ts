@@ -53,7 +53,7 @@ const router = Router();
  *                           seatId: { type: string }
  *                           row: { type: string }
  *                           number: { type: integer }
- *       400: { description: seatIds 개수/중복 오류(VALIDATION_ERROR) 또는 상영에 속하지 않는 좌석(INVALID_SEATS) }
+ *       400: { description: seatIds 개수/중복 오류(VALIDATION_ERROR), 상영에 속하지 않는 좌석(INVALID_SEATS), 또는 해당 상영에 대해 사용자가 보유 가능한 좌석 수(최대 6석) 초과(SEAT_LIMIT_EXCEEDED) }
  *       401: { description: 인증되지 않은 요청 }
  *       404: { description: 상영 정보를 찾을 수 없음(SHOWTIME_NOT_FOUND) }
  *       409: { description: 이미 예약된 좌석이 포함됨(SEAT_ALREADY_BOOKED) }

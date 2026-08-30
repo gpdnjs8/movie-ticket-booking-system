@@ -14,6 +14,12 @@ export const reservationRepository = {
     });
   },
 
+  countUserSeatsForShowtime(userId: bigint, showtimeId: bigint) {
+    return prisma.reservationSeat.count({
+      where: { showtimeId, reservation: { userId, status: "CONFIRMED" } },
+    });
+  },
+
   createWithSeats(params: {
     userId: bigint;
     showtimeId: bigint;

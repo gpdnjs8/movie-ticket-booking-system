@@ -25,3 +25,14 @@ export interface MyReservationItem {
   createdAt: string;
   seats: ReservationSeatItem[];
 }
+
+export interface GroupedReservation {
+  key: string;
+  movieTitle: string;
+  theaterName: string;
+  screenName: string;
+  startAt: string;
+  status: string;
+  totalPrice: number;
+  seats: ReservationSeatItem[];
+}

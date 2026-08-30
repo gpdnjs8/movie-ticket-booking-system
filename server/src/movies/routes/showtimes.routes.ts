@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { seatController } from "../controller/seat.controller";
 import { asyncHandler } from "../../middleware/error.middleware";
+import { attachUserIfPresent } from "../../middleware/auth.middleware";
 
 const router = Router();
 
@@ -30,6 +31,7 @@ const router = Router();
  *                   properties:
  *                     showtimeId: { type: string }
  *                     price: { type: integer }
+ *                     myReservedCount: { type: integer, description: "로그인한 사용자가 이 상영에 대해 이미 예매(CONFIRMED)한 좌석 수. 비로그인이면 0." }
  *                     seats:
  *                       type: array
  *                       items:
@@ -42,6 +44,6 @@ const router = Router();
  *       400: { description: 잘못된 상영 ID }
  *       404: { description: 상영 정보를 찾을 수 없음 }
  */
-router.get("/:id/seats", asyncHandler(seatController.listByShowtime));
+router.get("/:id/seats", attachUserIfPresent, asyncHandler(seatController.listByShowtime));
 
 export default router;

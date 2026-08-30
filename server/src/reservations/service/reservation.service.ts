@@ -14,6 +14,8 @@ function isSeatUniqueConstraintError(err: unknown): boolean {
   return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 }
 
+const MAX_SEATS_PER_SHOWTIME = 6;
+
 export const reservationService = {
   async create(userId: bigint, input: CreateReservationDto): Promise<CreateReservationResponseDto> {
     const showtimeId = BigInt(input.showtimeId);
@@ -35,6 +37,17 @@ export const reservationService = {
     const booked = await reservationRepository.findBookedSeatIds(showtimeId, seatIds);
     if (booked.length > 0) {
       throw AppError.conflict("이미 예약된 좌석이 포함되어 있습니다.", "SEAT_ALREADY_BOOKED");
+    }
+
+    const existingCount = await reservationRepository.countUserSeatsForShowtime(
+      userId,
+      showtimeId
+    );
+    if (existingCount + seatIds.length > MAX_SEATS_PER_SHOWTIME) {
+      throw AppError.badRequest(
+        `이 상영에 대해 최대 ${MAX_SEATS_PER_SHOWTIME}석까지만 예매할 수 있습니다. (이미 예매한 좌석: ${existingCount}석)`,
+        "SEAT_LIMIT_EXCEEDED"
+      );
     }
 
     const totalPrice = showtime.price * seatIds.length;

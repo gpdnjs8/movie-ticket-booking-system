@@ -2,8 +2,27 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import LoadingSpinner from "../../components/spinner";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { fetchMyReservations } from "../../apis/reservation/reservation";
+import { GroupedReservation, MyReservationItem } from "../../types/reservation";
 import { getErrorMessage } from "../../utils/errorMessage";
 import { formatDateTime } from "../../utils/formatDate";
+
+function groupByShowtime(items: MyReservationItem[]): GroupedReservation[] {
+  const groups = new Map<string, GroupedReservation>();
+  for (const item of items) {
+    const key = `${item.showtimeId}:${item.status}`;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.seats.push(...item.seats);
+      existing.totalPrice += item.totalPrice;
+    } else {
+      groups.set(key, { key, ...item, seats: [...item.seats] });
+    }
+  }
+  for (const group of groups.values()) {
+    group.seats.sort((a, b) => a.row.localeCompare(b.row) || a.number - b.number);
+  }
+  return Array.from(groups.values());
+}
 
 function MyReservationsPage() {
   const { data, error, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
@@ -16,6 +35,7 @@ function MyReservationsPage() {
     });
 
   const reservations = data?.pages.flatMap((page) => page.items) ?? [];
+  const groupedReservations = groupByShowtime(reservations);
 
   const sentinelRef = useInfiniteScroll({
     hasMore: hasNextPage ?? false,
@@ -46,9 +66,9 @@ function MyReservationsPage() {
       )}
 
       <ul className="flex flex-col gap-3">
-        {reservations.map((reservation) => (
+        {groupedReservations.map((reservation) => (
           <li
-            key={reservation.id}
+            key={reservation.key}
             className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface px-5 py-4"
           >
             <div>
