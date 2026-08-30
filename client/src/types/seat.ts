@@ -8,5 +8,6 @@ export interface Seat {
 export interface ShowtimeSeatsResponse {
   showtimeId: string;
   price: number;
+  myReservedCount: number;
   seats: Seat[];
 }

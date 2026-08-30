@@ -63,9 +63,7 @@ describe("GET /api/movies", () => {
     const first = await request(app).get("/api/movies").query({ take: 2 });
     const nextCursor = first.body.data.nextCursor;
 
-    const second = await request(app)
-      .get("/api/movies")
-      .query({ take: 2, cursor: nextCursor });
+    const second = await request(app).get("/api/movies").query({ take: 2, cursor: nextCursor });
 
     expect(second.status).toBe(200);
     expect(second.body.data.items).toHaveLength(1);
@@ -135,7 +133,7 @@ describe("GET /api/movies/:id/showtimes", () => {
         price: 13000,
       },
     });
-    // 다른 날짜 상영은 결과에 섞여 나오면 안 된다.
+
     await prisma.showtime.create({
       data: {
         movieId: movie.id,
@@ -316,6 +314,36 @@ describe("GET /api/showtimes/:id/seats", () => {
     );
     expect(byId[seatA1.id.toString()]).toBe(true);
     expect(byId[seatA2.id.toString()]).toBe(false);
+  });
+
+  it("price와 myReservedCount(비로그인 시 0)를 응답에 포함한다", async () => {
+    const { showtime } = await createShowtimeWithSeats();
+
+    const res = await request(app).get(`/api/showtimes/${showtime.id}/seats`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.price).toBe(12000);
+    expect(res.body.data.myReservedCount).toBe(0);
+  });
+
+  it("로그인한 사용자가 이미 예매한 좌석 수를 myReservedCount로 반환한다", async () => {
+    const { showtime, seatA1 } = await createShowtimeWithSeats();
+    const register = await request(app)
+      .post("/api/auth/register")
+      .send({ email: "myseats@example.com", password: "password123", name: "테스터" });
+    const token = register.body.data.accessToken as string;
+
+    await request(app)
+      .post("/api/reservations")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ showtimeId: showtime.id.toString(), seatIds: [seatA1.id.toString()] });
+
+    const res = await request(app)
+      .get(`/api/showtimes/${showtime.id}/seats`)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.myReservedCount).toBe(1);
   });
 
   it("존재하지 않는 상영이면 404를 반환한다", async () => {

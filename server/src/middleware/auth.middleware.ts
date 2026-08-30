@@ -17,3 +17,14 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
     throw AppError.unauthorized("유효하지 않거나 만료된 토큰입니다.");
   }
 }
+
+export function attachUserIfPresent(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) {
+    const token = header.slice("Bearer ".length);
+    try {
+      req.user = verifyAccessToken(token);
+    } catch {}
+  }
+  next();
+}

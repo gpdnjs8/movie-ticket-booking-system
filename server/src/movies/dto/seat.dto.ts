@@ -16,5 +16,6 @@ export interface SeatItemDto {
 export interface ShowtimeSeatsResponseDto {
   showtimeId: string;
   price: number;
+  myReservedCount: number;
   seats: SeatItemDto[];
 }

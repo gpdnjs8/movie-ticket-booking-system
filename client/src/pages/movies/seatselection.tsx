@@ -29,6 +29,8 @@ function SeatSelectionPage() {
 
   const seats = data?.seats ?? [];
   const pricePerSeat = data?.price ?? 0;
+  const myReservedCount = data?.myReservedCount ?? 0;
+  const remainingLimit = Math.max(0, MAX_SEATS - myReservedCount);
 
   const rows = useMemo(() => {
     const grouped = new Map<string, Seat[]>();
@@ -56,8 +58,14 @@ function SeatSelectionPage() {
     }
     setSelectedSeatIds((prev) => {
       if (prev.includes(seat.id)) return prev.filter((id) => id !== seat.id);
-      if (prev.length >= MAX_SEATS) {
-        showToast(`최대 ${MAX_SEATS}석까지 선택할 수 있어요.`);
+      if (prev.length >= remainingLimit) {
+        showToast(
+          remainingLimit === 0
+            ? `이 상영은 이미 최대 좌석 수(${MAX_SEATS}석)만큼 예매하셔서 더 선택할 수 없어요.`
+            : myReservedCount > 0
+              ? `기존에 ${myReservedCount}석 예매하셔서, 최대 ${remainingLimit}석까지만 더 선택할 수 있어요.`
+              : `최대 ${MAX_SEATS}석까지 선택할 수 있어요.`
+        );
         return prev;
       }
       return [...prev, seat.id];
@@ -96,7 +104,13 @@ function SeatSelectionPage() {
   return (
     <div className="px-[100px] py-7 pb-16">
       <h2 className="text-xl font-bold">좌석 선택</h2>
-      <p className="mt-1 text-[13px] text-muted">최대 {MAX_SEATS}석까지 선택할 수 있어요.</p>
+      <p className="mt-1 text-[13px] text-muted">
+        {remainingLimit === 0
+          ? `이 상영은 이미 최대 좌석 수(${MAX_SEATS}석)만큼 예매하셨어요. 더 선택할 수 없어요.`
+          : myReservedCount > 0
+            ? `이 상영에 이미 ${myReservedCount}석 예매하셨어요. 최대 ${remainingLimit}석까지 더 선택할 수 있어요.`
+            : `최대 ${MAX_SEATS}석까지 선택할 수 있어요.`}
+      </p>
 
       <div className="mb-6 mt-6 border-b-2 border-border pb-3.5 text-center text-xs tracking-[4px] text-muted">
         SCREEN

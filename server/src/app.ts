@@ -19,10 +19,6 @@ export function createApp() {
   app.use(express.json());
   app.use(cookieParser());
 
-  app.get("/health", (_req, res) => {
-    res.json({ status: "ok" });
-  });
-
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.use("/api/auth", authRoutes);
   app.use("/api/movies", moviesRoutes);
