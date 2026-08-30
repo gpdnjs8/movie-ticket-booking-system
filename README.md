@@ -5,13 +5,22 @@
 ## 기술 스택
 
 Server: Node.js (Express, TypeScript)
+
 Database: PostgreSQL (Docker)
+
 ORM: Prisma
+
 Frontend: React (Vite, TypeScript)
+
 인증: JWT + bcrypt
+
 스타일: Tailwind CSS
+
 테스트: Jest + Supertest
+
 API 문서: Swagger
+
+<br/>
 
 ## 실행 방법
 
@@ -74,6 +83,8 @@ npm run prisma:migrate:test
 npm test
 ```
 
+<br/>
+
 ## 프로젝트 구조
 
 npm workspaces 기반 모노레포입니다.
@@ -130,6 +141,8 @@ client/src/
 └── utils/        ← 날짜 포맷, 에러 메시지 추출 등
 ```
 
+<br/>
+
 ## 설계 의도
 
 **Express**: 미들웨어 체인이 단순해서 도메인별 계층 구조(controller/service/repository)를 얹기 쉬움
@@ -146,15 +159,29 @@ client/src/
 
 **복합 외래키로 정합성 강제**: `reservation_seats`가 좌석/상영을 각각 `(id, screenId)` 조합으로 참조하게 해서, "다른 상영관 좌석 예매" 같은 상태가 DB 레벨에서 불가능하게 설계
 
+<br/>
+
 ## 고려한 사항
 
 ### 좌석 선택 및 예매
 
-동시성 제어: `(showtimeId, seatId)` DB 유니크 제약위반 시 409로 변환하며 동시 요청 통합 테스트로 검증
+**에러 케이스**
 
-원자성 보장: 예매 생성과 좌석 배정을 단일 트랜잭션으로 묶어 부분 반영 방지
+| 상황                                                                            | 상태코드 | 에러 코드             |
+| ------------------------------------------------------------------------------- | -------- | --------------------- |
+| 좌석 0개 또는 7개 이상, 중복 좌석 포함                                          | 400      | (요청 검증 실패)      |
+| 존재하지 않는 상영                                                              | 404      | `SHOWTIME_NOT_FOUND`  |
+| 좌석이 해당 상영관 소속이 아니거나 존재하지 않음                                | 400      | `INVALID_SEATS`       |
+| 이미 예약된 좌석 포함 (사전 체크 또는 동시 요청으로 인한 유니크 제약 위반)      | 409      | `SEAT_ALREADY_BOOKED` |
+| 같은 상영에 대해 사용자의 누적 예매 좌석(기존 CONFIRMED + 이번 요청)이 6석 초과 | 400      | `SEAT_LIMIT_EXCEEDED` |
 
-상영별 좌석 상한: 한 번 요청이 아니라 상영당 누적 6석으로 제한
+요청 단계에서 zod로 좌석 개수(1~6개)와 중복 여부를 먼저 걸러내고, 존재 여부 → 예약 여부를 순서대로 검증한 뒤 트랜잭션 진입
+
+**동시성 제어**
+
+- 좌석 중복 예매: `(showtimeId, seatId)` DB 유니크 제약 위반 시 409(`SEAT_ALREADY_BOOKED`)로 변환
+- 원자성: 예매 생성과 좌석 배정을 단일 트랜잭션으로 묶어 부분 반영 방지
+- 정합성: `reservation_seats`가 좌석/상영을 `screenId` 포함 복합 외래키로 참조해, 다른 상영관 좌석이 섞이는 상태를 DB 레벨에서 차단
 
 ### 목록 조회
 
@@ -164,4 +191,4 @@ client/src/
 
 버튼 비활성화 대신 토스트로 실패 사유 안내
 
-무한스크롤 + 스켈레톤 UI
+빈 화면 대신 스켈레톤 UI(영화 목록)와 로딩 스피너(상영시간, 좌석, 예매 내역)로 데이터를 불러오는 동안에도 레이아웃을 미리 표시
