@@ -4,14 +4,14 @@
 
 ## 기술 스택
 
-- Server: Node.js (Express, TypeScript)
-- Database: PostgreSQL (Docker)
-- ORM: Prisma
-- Frontend: React (Vite, TypeScript)
-- 인증: JWT + bcrypt
-- 스타일: Tailwind CSS
-- 테스트: Jest + Supertest
-- API 문서: Swagger
+Server: Node.js (Express, TypeScript)
+Database: PostgreSQL (Docker)
+ORM: Prisma
+Frontend: React (Vite, TypeScript)
+인증: JWT + bcrypt
+스타일: Tailwind CSS
+테스트: Jest + Supertest
+API 문서: Swagger
 
 ## 실행 방법
 
@@ -148,22 +148,20 @@ client/src/
 
 ## 고려한 사항
 
-### API
+### 좌석 선택 및 예매
 
-#### 좌석 선택 및 예매
-
-동시성 제어: `(showtimeId, seatId)` DB 유니크 제약위반 시(`P2002`) 409로 변환하며 동시 요청 통합 테스트로 검증
+동시성 제어: `(showtimeId, seatId)` DB 유니크 제약위반 시 409로 변환하며 동시 요청 통합 테스트로 검증
 
 원자성 보장: 예매 생성과 좌석 배정을 단일 트랜잭션으로 묶어 부분 반영 방지
 
 상영별 좌석 상한: 한 번 요청이 아니라 상영당 누적 6석으로 제한
 
-#### 목록 조회
+### 목록 조회
 
-커서 기반 페이지네이션으로 대용량 데이터 대비
+대용량 데이터를 고려하여 커서 기반 페이지네이션으로 구현
 
 ### 화면 - 사용자 경험
 
-#### 버튼 비활성화 대신 토스트로 실패 사유 안내
+버튼 비활성화 대신 토스트로 실패 사유 안내
 
-#### 무한스크롤 + 스켈레톤 UI
+무한스크롤 + 스켈레톤 UI
