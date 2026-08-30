@@ -43,8 +43,6 @@ client/src/
 { "error": { "code": "SEAT_ALREADY_BOOKED", "message": "이미 예약된 좌석이 포함되어 있습니다." } }
 ```
 
----
-
 ## 구현 체크리스트
 
 ### 1. auth — 인증/인가
