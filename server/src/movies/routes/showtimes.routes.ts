@@ -29,6 +29,7 @@ const router = Router();
  *                   type: object
  *                   properties:
  *                     showtimeId: { type: string }
+ *                     price: { type: integer }
  *                     seats:
  *                       type: array
  *                       items:

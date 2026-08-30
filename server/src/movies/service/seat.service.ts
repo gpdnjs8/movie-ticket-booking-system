@@ -17,6 +17,7 @@ export const seatService = {
 
     return {
       showtimeId: showtimeId.toString(),
+      price: showtime.price,
       seats: seats.map((seat) => ({
         id: seat.id.toString(),
         row: seat.row,

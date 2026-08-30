@@ -3,8 +3,8 @@ import { prisma } from "../src/infra/prisma";
 
 const THEATER_NAMES = ["강남점", "홍대점", "잠실점", "여의도점", "신촌점"];
 const SCREEN_NAMES = ["1관", "2관", "3관", "4관", "5관", "6관"];
-const SEAT_ROWS = ["A", "B", "C", "D", "E"];
-const SEATS_PER_ROW = 4;
+const SEAT_ROWS = ["A", "B", "C", "D", "E", "F"];
+const SEATS_PER_ROW = 8;
 
 const MOVIES: {
   title: string;
@@ -113,6 +113,15 @@ function buildStartAt(baseDate: Date, dayOffset: number, hhmm: string) {
   return startAt;
 }
 
+function shuffledIndexes(length: number): number[] {
+  const indexes = Array.from({ length }, (_, i) => i);
+  for (let i = indexes.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+  }
+  return indexes;
+}
+
 async function createShowtimes(
   theaters: { screens: { id: bigint }[] }[],
   movies: { id: bigint; runtimeMin: number }[]
@@ -129,16 +138,24 @@ async function createShowtimes(
   }[] = [];
 
   for (let dayOffset = 0; dayOffset < DAY_RANGE; dayOffset += 1) {
-    for (let screenIndex = 0; screenIndex < SCREEN_NAMES.length; screenIndex += 1) {
-      const movieIndex = (dayOffset * SCREEN_NAMES.length + screenIndex) % movies.length;
-      const movie = movies[movieIndex];
+    for (let theaterIndex = 0; theaterIndex < theaters.length; theaterIndex += 1) {
+      const theater = theaters[theaterIndex];
+      const theaterOffsetMinutes = theaterIndex * 7;
+      const screenOrder = shuffledIndexes(SCREEN_NAMES.length);
 
-      let startAt = buildStartAt(baseDate, dayOffset, OPENING_TIME);
+      for (let slot = 0; slot < SCREEN_NAMES.length; slot += 1) {
+        const movieIndex = (dayOffset * SCREEN_NAMES.length + slot) % movies.length;
+        const movie = movies[movieIndex];
+        const screenIndex = screenOrder[slot];
 
-      for (let show = 0; show < SHOWS_PER_DAY; show += 1) {
-        const endAt = new Date(startAt.getTime() + movie.runtimeMin * 60 * 1000);
+        let startAt = new Date(
+          buildStartAt(baseDate, dayOffset, OPENING_TIME).getTime() +
+            theaterOffsetMinutes * 60 * 1000
+        );
 
-        for (const theater of theaters) {
+        for (let show = 0; show < SHOWS_PER_DAY; show += 1) {
+          const endAt = new Date(startAt.getTime() + movie.runtimeMin * 60 * 1000);
+
           showtimeRows.push({
             movieId: movie.id,
             screenId: theater.screens[screenIndex].id,
@@ -146,9 +163,9 @@ async function createShowtimes(
             endAt,
             price: FIXED_PRICE,
           });
-        }
 
-        startAt = new Date(endAt.getTime() + CLEANUP_MINUTES * 60 * 1000);
+          startAt = new Date(endAt.getTime() + CLEANUP_MINUTES * 60 * 1000);
+        }
       }
     }
   }
@@ -164,7 +181,7 @@ async function main() {
   const showtimeCount = await createShowtimes(theaters, movies);
   // eslint-disable-next-line no-console -- 시드 완료 알림용 의도된 로그
   console.log(
-    `시드 완료: 영화관 ${THEATER_NAMES.length}개(모두 동일한 스케줄), 상영관 ${SCREEN_NAMES.length}개/관, ` +
+    `시드 완료: 영화관 ${THEATER_NAMES.length}개(영화관마다 같은 영화, 시간은 살짝 다름), 상영관 ${SCREEN_NAMES.length}개/관, ` +
       `영화 ${MOVIES.length}개, 상영시간 총 ${showtimeCount}개`
   );
 }
