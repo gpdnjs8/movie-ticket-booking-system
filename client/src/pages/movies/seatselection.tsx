@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import LoadingSpinner from "../../components/loadingspinner";
+import LoadingSpinner from "../../components/spinner";
 import { fetchSeatsByShowtime } from "../../apis/movies/seat";
 import { createReservation } from "../../apis/reservation/reservation";
 import { Seat } from "../../types/seat";
@@ -12,31 +13,22 @@ function SeatSelectionPage() {
   const { showtimeId } = useParams<{ showtimeId: string }>();
   const navigate = useNavigate();
 
-  const [seats, setSeats] = useState<Seat[]>([]);
-  const [pricePerSeat, setPricePerSeat] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    if (!showtimeId) return;
-    setLoading(true);
-    setLoadError("");
-    fetchSeatsByShowtime(showtimeId)
-      .then((res) => {
-        setSeats(res.seats);
-        setPricePerSeat(res.price);
-      })
-      .catch((error) => {
-        setLoadError(getErrorMessage(error, "좌석 정보를 불러오지 못했습니다."));
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [showtimeId]);
+  const {
+    data,
+    error: loadError,
+    isLoading,
+  } = useQuery({
+    queryKey: ["seats", showtimeId],
+    queryFn: () => fetchSeatsByShowtime(showtimeId!),
+    enabled: !!showtimeId,
+  });
+
+  const seats = data?.seats ?? [];
+  const pricePerSeat = data?.price ?? 0;
 
   const rows = useMemo(() => {
     const grouped = new Map<string, Seat[]>();
@@ -72,20 +64,18 @@ function SeatSelectionPage() {
     });
   };
 
-  const handleSubmit = async () => {
+  const reservationMutation = useMutation({
+    mutationFn: () => createReservation(showtimeId!, selectedSeatIds),
+    onSuccess: () => navigate("/reservations/me"),
+    onError: (error) => showToast(getErrorMessage(error, "예매에 실패했습니다.")),
+  });
+
+  const handleSubmit = () => {
     if (!showtimeId || selectedSeatIds.length === 0) return;
-    setSubmitting(true);
-    try {
-      await createReservation(showtimeId, selectedSeatIds);
-      navigate("/reservations/me");
-    } catch (error) {
-      showToast(getErrorMessage(error, "예매에 실패했습니다."));
-    } finally {
-      setSubmitting(false);
-    }
+    reservationMutation.mutate();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="px-[100px] py-7">
         <LoadingSpinner label="좌석 정보를 불러오는 중이에요" />
@@ -96,7 +86,9 @@ function SeatSelectionPage() {
   if (loadError) {
     return (
       <div className="px-[100px] py-7">
-        <p className="py-16 text-center text-sm text-primary">{loadError}</p>
+        <p className="py-16 text-center text-sm text-primary">
+          {getErrorMessage(loadError, "좌석 정보를 불러오지 못했습니다.")}
+        </p>
       </div>
     );
   }
@@ -165,11 +157,11 @@ function SeatSelectionPage() {
         </div>
         <button
           type="button"
-          disabled={selectedSeatIds.length === 0 || submitting}
+          disabled={selectedSeatIds.length === 0 || reservationMutation.isPending}
           onClick={handleSubmit}
           className="rounded-lg bg-primary px-[18px] py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? "예매 처리 중..." : "예매하기"}
+          {reservationMutation.isPending ? "예매 처리 중..." : "예매하기"}
         </button>
       </div>
     </div>

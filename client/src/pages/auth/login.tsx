@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { loginSchema } from "../../schemas/auth";
 import { login } from "../../apis/auth/auth";
@@ -13,10 +14,17 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const loginMutation = useMutation({
+    mutationFn: login,
+    onSuccess: (res) => {
+      loginSuccess(res.user, res.accessToken);
+      const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
+      navigate(from, { replace: true });
+    },
+  });
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
@@ -28,19 +36,7 @@ function LoginPage() {
       return;
     }
     setErrors({});
-    setSubmitError("");
-    setSubmitting(true);
-    try {
-      const res = await login(parsed.data);
-      loginSuccess(res.user, res.accessToken);
-
-      const from = (location.state as { from?: Location })?.from?.pathname ?? "/";
-      navigate(from, { replace: true });
-    } catch (error) {
-      setSubmitError(getErrorMessage(error, "로그인에 실패했습니다."));
-    } finally {
-      setSubmitting(false);
-    }
+    loginMutation.mutate(parsed.data);
   };
 
   const inputClass =
@@ -70,13 +66,17 @@ function LoginPage() {
           />
           {errors.password && <span className="text-m text-primary">{errors.password}</span>}
         </label>
-        {submitError && <p className="text-m text-primary">{submitError}</p>}
+        {loginMutation.isError && (
+          <p className="text-m text-primary">
+            {getErrorMessage(loginMutation.error, "로그인에 실패했습니다.")}
+          </p>
+        )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={loginMutation.isPending}
           className="rounded-lg bg-primary py-3 mt-10 text-base font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? "로그인 중..." : "로그인"}
+          {loginMutation.isPending ? "로그인 중..." : "로그인"}
         </button>
       </form>
       <p className="mt-5 text-center text-sm text-muted">

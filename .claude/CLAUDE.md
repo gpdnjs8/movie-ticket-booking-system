@@ -5,7 +5,7 @@
 - Server: Node.js + Express + TypeScript
 - DB: PostgreSQL (Docker, 포트 5433)
 - ORM: Prisma
-- Frontend: React + TypeScript + Vite
+- Frontend: React + TypeScript + Vite + TanStack Query
 - 인증: JWT + bcrypt
 
 ## 폴더 구조 규칙
@@ -35,6 +35,7 @@ client/src/
 - 성공 응답은 `common/response.ts`의 `success(res, statusCode, data)`로 통일한다.
   모든 성공 응답은 `{ data: ... }` 형태다. 컨트롤러에서 `res.status().json()`을 직접 쓰지 않는다.
 - 커밋 메시지: `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`
+- 프론트에서 서버 데이터 페칭/뮤테이션은 TanStack Query의 `useQuery`/`useMutation`/`useInfiniteQuery`로 한다. `useState`+`useEffect`로 직접 fetch하지 않는다 (로딩 해제 누락, stale 응답 경쟁 상태를 막기 위함).
 
 ## 에러 응답 형식
 

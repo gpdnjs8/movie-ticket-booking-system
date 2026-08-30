@@ -26,19 +26,37 @@ function clearSession() {
   window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
 }
 
+let sessionGeneration = 0;
+
+export function invalidateSession() {
+  sessionGeneration += 1;
+}
+
+class SessionInvalidatedError extends Error {
+  constructor() {
+    super("로그아웃된 세션입니다.");
+  }
+}
+
 let refreshPromise: Promise<string> | null = null;
 
 export async function refreshAccessToken(): Promise<string> {
-  refreshPromise ??= axiosInstance
-    .post<{ data: { accessToken: string } }>("/api/auth/refresh")
-    .then((res) => {
-      const accessToken = res.data.data.accessToken;
-      localStorage.setItem("token", accessToken);
-      return accessToken;
-    })
-    .finally(() => {
-      refreshPromise = null;
-    });
+  refreshPromise ??= (() => {
+    const generationAtStart = sessionGeneration;
+    return axiosInstance
+      .post<{ data: { accessToken: string } }>("/api/auth/refresh")
+      .then((res) => {
+        if (sessionGeneration !== generationAtStart) {
+          throw new SessionInvalidatedError();
+        }
+        const accessToken = res.data.data.accessToken;
+        localStorage.setItem("token", accessToken);
+        return accessToken;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  })();
 
   return refreshPromise;
 }

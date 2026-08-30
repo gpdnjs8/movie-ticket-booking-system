@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import LoadingSpinner from "../../components/loadingspinner";
+import LoadingSpinner from "../../components/spinner";
 import { fetchShowtimesByMovie } from "../../apis/movies/showtime";
-import { MovieShowtimesResponse } from "../../types/showtime";
 import { formatTime } from "../../utils/formatDate";
+import { getErrorMessage } from "../../utils/errorMessage";
 
 function todayDateString(): string {
   const now = new Date();
@@ -17,27 +18,33 @@ function MovieShowtimesPage() {
   const { movieId } = useParams<{ movieId: string }>();
   const navigate = useNavigate();
 
-  const [data, setData] = useState<MovieShowtimesResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedTheaterId, setSelectedTheaterId] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>(todayDateString());
 
-  useEffect(() => {
-    if (!movieId) return;
-    setLoading(true);
-    fetchShowtimesByMovie(movieId, {
-      date: selectedDate,
-      theaterId: selectedTheaterId === "all" ? undefined : selectedTheaterId,
-    }).then((res) => {
-      setData(res);
-      setLoading(false);
-    });
-  }, [movieId, selectedDate, selectedTheaterId]);
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["showtimes", movieId, selectedDate, selectedTheaterId],
+    queryFn: () =>
+      fetchShowtimesByMovie(movieId!, {
+        date: selectedDate,
+        theaterId: selectedTheaterId === "all" ? undefined : selectedTheaterId,
+      }),
+    enabled: !!movieId,
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="px-[100px] py-7">
         <LoadingSpinner label="상영시간을 불러오는 중이에요" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="px-[100px] py-7">
+        <p className="py-16 text-center text-sm text-primary">
+          {getErrorMessage(error, "상영시간을 불러오지 못했습니다.")}
+        </p>
       </div>
     );
   }

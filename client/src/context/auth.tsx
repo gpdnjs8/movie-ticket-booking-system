@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { User } from "../types/auth";
 import { logout as logoutRequest } from "../apis/auth/auth";
-import { AUTH_LOGOUT_EVENT, refreshAccessToken } from "../apis/axiosInstance";
+import { AUTH_LOGOUT_EVENT, invalidateSession, refreshAccessToken } from "../apis/axiosInstance";
 
 interface AuthContextValue {
   user: User | null;
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    invalidateSession();
     try {
       await logoutRequest();
     } finally {

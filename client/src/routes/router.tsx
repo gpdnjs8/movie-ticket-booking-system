@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "../layouts/root-layout";
 import ProtectedRoute from "./protectedRoute";
 import MoviesPage from "../pages/movies/movies";
-import MovieShowtimesPage from "../pages/movies/movieshowtimes";
+import MovieShowtimesPage from "../pages/movies/showtimes";
 import SeatSelectionPage from "../pages/movies/seatselection";
 import MyReservationsPage from "../pages/reservation/myreservations";
 import LoginPage from "../pages/auth/login";

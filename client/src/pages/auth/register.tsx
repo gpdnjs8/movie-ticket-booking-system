@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { registerSchema } from "../../schemas/auth";
 import { register } from "../../apis/auth/auth";
@@ -11,10 +12,16 @@ function RegisterPage() {
 
   const [form, setForm] = useState({ email: "", password: "", name: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const registerMutation = useMutation({
+    mutationFn: register,
+    onSuccess: (res) => {
+      loginSuccess(res.user, res.accessToken);
+      navigate("/", { replace: true });
+    },
+  });
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const parsed = registerSchema.safeParse(form);
     if (!parsed.success) {
@@ -26,17 +33,7 @@ function RegisterPage() {
       return;
     }
     setErrors({});
-    setSubmitError("");
-    setSubmitting(true);
-    try {
-      const res = await register(parsed.data);
-      loginSuccess(res.user, res.accessToken);
-      navigate("/", { replace: true });
-    } catch (error) {
-      setSubmitError(getErrorMessage(error, "회원가입에 실패했습니다."));
-    } finally {
-      setSubmitting(false);
-    }
+    registerMutation.mutate(parsed.data);
   };
 
   const inputClass =
@@ -76,13 +73,17 @@ function RegisterPage() {
           />
           {errors.password && <span className="text-sm text-primary">{errors.password}</span>}
         </label>
-        {submitError && <p className="text-sm text-primary">{submitError}</p>}
+        {registerMutation.isError && (
+          <p className="text-sm text-primary">
+            {getErrorMessage(registerMutation.error, "회원가입에 실패했습니다.")}
+          </p>
+        )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={registerMutation.isPending}
           className="rounded-lg bg-primary py-3 mt-10 text-base font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting ? "가입 중..." : "회원가입"}
+          {registerMutation.isPending ? "가입 중..." : "회원가입"}
         </button>
       </form>
       <p className="mt-5 text-center text-sm text-muted">
