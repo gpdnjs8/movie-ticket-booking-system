@@ -2,6 +2,7 @@
 
 회원가입/로그인부터 영화·상영시간 조회, 좌석 선택 및 예매, 예매 내역 조회까지 이어지는 흐름을 구현한 영화 티켓 예매 웹 서비스입니다.
 
+
 ## 기술 스택
 
 Server: Node.js (Express, TypeScript)
@@ -20,7 +21,7 @@ Frontend: React (Vite, TypeScript)
 
 API 문서: Swagger
 
-<br/>
+
 
 ## 실행 방법
 
@@ -83,7 +84,6 @@ npm run prisma:migrate:test
 npm test
 ```
 
-<br/>
 
 ## 프로젝트 구조
 
@@ -141,7 +141,6 @@ client/src/
 └── utils/        ← 날짜 포맷, 에러 메시지 추출 등
 ```
 
-<br/>
 
 ## 설계 의도
 
@@ -159,7 +158,7 @@ client/src/
 
 **복합 외래키로 정합성 강제**: `reservation_seats`가 좌석/상영을 각각 `(id, screenId)` 조합으로 참조하게 해서, "다른 상영관 좌석 예매" 같은 상태가 DB 레벨에서 불가능하게 설계
 
-<br/>
+
 
 ## 고려한 사항
 
