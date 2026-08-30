@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { AppError } from "../../errors/error";
 import { buildCursorPage, CursorPageDto, DEFAULT_TAKE } from "../../common/pagination";
 import { showtimeRepository } from "../../movies/repository/showtime.repository";
-import { reservationRepository } from "../repository/reservation.repository";
+import { reservationRepository, SeatLimitExceededError } from "../repository/reservation.repository";
 import {
   CreateReservationDto,
   CreateReservationResponseDto,
@@ -39,31 +39,27 @@ export const reservationService = {
       throw AppError.conflict("이미 예약된 좌석이 포함되어 있습니다.", "SEAT_ALREADY_BOOKED");
     }
 
-    const existingCount = await reservationRepository.countUserSeatsForShowtime(
-      userId,
-      showtimeId
-    );
-    if (existingCount + seatIds.length > MAX_SEATS_PER_SHOWTIME) {
-      throw AppError.badRequest(
-        `이 상영에 대해 최대 ${MAX_SEATS_PER_SHOWTIME}석까지만 예매할 수 있습니다. (이미 예매한 좌석: ${existingCount}석)`,
-        "SEAT_LIMIT_EXCEEDED"
-      );
-    }
-
     const totalPrice = showtime.price * seatIds.length;
 
     let reservation;
     try {
-      reservation = await reservationRepository.createWithSeats({
+      reservation = await reservationRepository.createWithSeatsIfUnderLimit({
         userId,
         showtimeId,
         screenId: showtime.screenId,
         totalPrice,
         seatIds,
+        maxSeatsPerShowtime: MAX_SEATS_PER_SHOWTIME,
       });
     } catch (err) {
       if (isSeatUniqueConstraintError(err)) {
         throw AppError.conflict("이미 예약된 좌석이 포함되어 있습니다.", "SEAT_ALREADY_BOOKED");
+      }
+      if (err instanceof SeatLimitExceededError) {
+        throw AppError.badRequest(
+          `이 상영에 대해 최대 ${MAX_SEATS_PER_SHOWTIME}석까지만 예매할 수 있습니다. (이미 예매한 좌석: ${err.existingCount}석)`,
+          "SEAT_LIMIT_EXCEEDED"
+        );
       }
       throw err;
     }
